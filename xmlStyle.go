@@ -570,9 +570,8 @@ func (styles *xlsxStyleSheet) Marshal() (string, error) {
 		return "", err
 	}
 	result += xcellXfs
-
 	if styles.CellStyles != nil {
-		xcellStyles, err := styles.CellStyles.Marshal()
+		xcellStyles, err := styles.CellStyles.Marshal(styles.CellStyleXfs.Count - 1)
 		if err != nil {
 			return "", err
 		}
@@ -967,10 +966,13 @@ type xlsxCellStyles struct {
 	CellStyle []xlsxCellStyle `xml:"cellStyle,omitempty"`
 }
 
-func (cellStyles *xlsxCellStyles) Marshal() (result string, err error) {
+func (cellStyles *xlsxCellStyles) Marshal(maxXfId int) (result string, err error) {
 	if cellStyles.Count > 0 {
 		result = fmt.Sprintf(`<cellStyles count="%d">`, cellStyles.Count)
 		for _, cellStyle := range cellStyles.CellStyle {
+			if cellStyle.XfId > maxXfId {
+				continue
+			}
 			var xCellStyle []byte
 			xCellStyle, err = xml.Marshal(cellStyle)
 			if err != nil {
